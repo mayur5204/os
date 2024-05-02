@@ -1,0 +1,149 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MAX_REQUESTS 100
+
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void sort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                swap(&arr[j], &arr[j + 1]);
+            }
+        }
+    }
+}
+
+int findClosest(int requests[], int n, int head) {
+    int minDist = abs(head - requests[0]);
+    int index = 0;
+
+    for (int i = 1; i < n; i++) {
+        int dist = abs(head - requests[i]);
+        if (dist < minDist) {
+            minDist = dist;
+            index = i;
+        }
+    }
+
+    return index;
+}
+
+void SSTF(int requests[], int n, int head) {
+    int totalSeek = 0;
+    int visited[MAX_REQUESTS] = {0};
+
+    printf("SSTF Disk Scheduling:\n");
+    printf("Sequence: %d ", head);
+
+    for (int i = 0; i < n; i++) {
+        int index = findClosest(requests, n, head);
+        totalSeek += abs(head - requests[index]);
+        visited[index] = 1;
+        head = requests[index];
+        printf("%d ", head);
+    }
+
+    printf("\nTotal Seek Time: %d\n", totalSeek);
+}
+
+void SCAN(int requests[], int n, int head) {
+    int totalSeek = 0;
+    bool direction = true; // true for moving towards higher cylinder numbers, false otherwise
+
+    printf("SCAN Disk Scheduling:\n");
+    printf("Sequence: %d ", head);
+
+    // Sort requests
+    sort(requests, n);
+
+    int index = 0;
+    while (index < n && requests[index] < head) {
+        index++;
+    }
+
+    if (index == n) {
+        // If all requests are less than the head position, change direction
+        direction = false;
+        index = n - 1;
+    }
+
+    while (index >= 0 && index < n) {
+        totalSeek += abs(head - requests[index]);
+        head = requests[index];
+        printf("%d ", head);
+
+        if (direction) {
+            index++;
+        } else {
+            index--;
+        }
+    }
+
+    totalSeek += abs(head - (direction ? 199 : 0));
+
+    printf("%d ", direction ? 199 : 0);
+    printf("\nTotal Seek Time: %d\n", totalSeek);
+}
+
+void C_Look(int requests[], int n, int head) {
+    int totalSeek = 0;
+
+    printf("C-Look Disk Scheduling:\n");
+    printf("Sequence: %d ", head);
+
+    // Sort requests
+    sort(requests, n);
+
+    int index = 0;
+    while (index < n && requests[index] < head) {
+        index++;
+    }
+
+    if (index == n) {
+        // If all requests are less than the head position, start from the beginning
+        index = 0;
+    }
+
+    while (index < n) {
+        totalSeek += abs(head - requests[index]);
+        head = requests[index];
+        printf("%d ", head);
+        index++;
+    }
+
+    totalSeek += abs(head - requests[0]);
+
+    printf("%d ", requests[0]);
+    printf("\nTotal Seek Time: %d\n", totalSeek);
+}
+
+int main() {
+    int requests[MAX_REQUESTS];
+    int n, head;
+
+    printf("Enter the number of requests: ");
+    scanf("%d", &n);
+
+    printf("Enter the requests: ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    printf("Enter the initial head position: ");
+    scanf("%d", &head);
+
+    SSTF(requests, n, head);
+
+    SCAN(requests, n, head);
+
+    C_Look(requests, n, head);
+
+    return 0;
+}
