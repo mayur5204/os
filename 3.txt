@@ -53,8 +53,11 @@ void round_robin(struct process *processes, int n, int quantum) {
     int completed_processes = 0;
 
     while (completed_processes < n) {
+        int flag = 0; // Flag to check if any process was executed in this time quantum
+
         for (int i = 0; i < n; i++) {
             if (processes[i].arrival_time <= current_time && processes[i].remaining_time > 0) {
+                flag = 1; // At least one process is being executed in this time quantum
                 if (processes[i].remaining_time <= quantum) {
                     current_time += processes[i].remaining_time;
                     processes[i].remaining_time = 0;
@@ -65,6 +68,11 @@ void round_robin(struct process *processes, int n, int quantum) {
                     processes[i].remaining_time -= quantum;
                 }
             }
+        }
+
+        if (flag == 0) {
+            // If no process was executed in this time quantum, increment current time
+            current_time++;
         }
     }
 
