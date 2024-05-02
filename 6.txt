@@ -1,0 +1,170 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MAX_FRAMES 10
+#define MAX_PAGES 100
+
+bool isInFrame(int page, int frames[], int frameSize) {
+    for (int i = 0; i < frameSize; i++) {
+        if (frames[i] == page) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int findAvailableFrame(int frames[], int frameSize) {
+    for (int i = 0; i < frameSize; i++) {
+        if (frames[i] == -1) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void displayFrames(int frames[], int frameSize) {
+    printf("Frames: ");
+    for (int i = 0; i < frameSize; i++) {
+        if (frames[i] != -1) {
+            printf("%d ", frames[i]);
+        } else {
+            printf("- ");
+        }
+    }
+    printf("\n");
+}
+
+void FCFS(int pages[], int n, int frames[], int frameSize) {
+    int pageFaults = 0;
+    int currentIndex = 0;
+
+    for (int i = 0; i < frameSize; i++) {
+        frames[i] = -1;
+    }
+
+    for (int i = 0; i < n; i++) {
+        // If page is not in frame, replace the oldest page
+        if (!isInFrame(pages[i], frames, frameSize)) {
+            int availableFrameIndex = findAvailableFrame(frames, frameSize);
+            if (availableFrameIndex == -1) {
+                // If no empty frame available, replace the oldest page
+                frames[currentIndex] = pages[i];
+                currentIndex = (currentIndex + 1) % frameSize;
+            } else {
+                frames[availableFrameIndex] = pages[i];
+            }
+            pageFaults++;
+        }
+        displayFrames(frames, frameSize);
+    }
+
+    printf("Total Page Faults (FCFS): %d\n", pageFaults);
+}
+
+void LRU(int pages[], int n, int frames[], int frameSize) {
+    int pageFaults = 0;
+    int currentIndex = 0;
+    int *recentlyUsed = (int *)malloc(frameSize * sizeof(int));
+
+    for (int i = 0; i < frameSize; i++) {
+        frames[i] = -1;
+        recentlyUsed[i] = 0;
+    }
+
+    for (int i = 0; i < n; i++) {
+        // If page is not in frame, replace the least recently used page
+        if (!isInFrame(pages[i], frames, frameSize)) {
+            int availableFrameIndex = findAvailableFrame(frames, frameSize);
+            if (availableFrameIndex == -1) {
+                // If no empty frame available, replace the least recently used page
+                int min = 0;
+                for (int j = 1; j < frameSize; j++) {
+                    if (recentlyUsed[j] < recentlyUsed[min]) {
+                        min = j;
+                    }
+                }
+                frames[min] = pages[i];
+                recentlyUsed[min] = i;
+            } else {
+                frames[availableFrameIndex] = pages[i];
+                recentlyUsed[availableFrameIndex] = i;
+            }
+            pageFaults++;
+        } else {
+            // Update recently used time for the page
+            for (int j = 0; j < frameSize; j++) {
+                if (frames[j] == pages[i]) {
+                    recentlyUsed[j] = i;
+                    break;
+                }
+            }
+        }
+        displayFrames(frames, frameSize);
+    }
+
+    printf("Total Page Faults (LRU): %d\n", pageFaults);
+    free(recentlyUsed);
+}
+
+void Optimal(int pages[], int n, int frames[], int frameSize) {
+    int pageFaults = 0;
+
+    for (int i = 0; i < n; i++) {
+        // If page is not in frame, replace the page that will not be used for the longest time
+        if (!isInFrame(pages[i], frames, frameSize)) {
+            int index = -1, farthest = i;
+            for (int j = 0; j < frameSize; j++) {
+                int k;
+                for (k = i + 1; k < n; k++) {
+                    if (frames[j] == pages[k]) {
+                        break;
+                    }
+                }
+                if (k == n) {
+                    index = j;
+                    break;
+                }
+                if (k > farthest) {
+                    farthest = k;
+                    index = j;
+                }
+            }
+            if (index != -1) {
+                frames[index] = pages[i];
+            }
+            pageFaults++;
+        }
+        displayFrames(frames, frameSize);
+    }
+
+    printf("Total Page Faults (Optimal): %d\n", pageFaults);
+}
+
+int main() {
+    int pages[MAX_PAGES];
+    int frames[MAX_FRAMES];
+    int n, frameSize;
+
+    printf("Enter the number of pages: ");
+    scanf("%d", &n);
+    printf("Enter the frame size: ");
+    scanf("%d", &frameSize);
+
+    printf("Enter the page sequence: ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &pages[i]);
+    }
+
+    printf("\nFirst Come First Serve (FCFS):\n");
+    FCFS(pages, n, frames, frameSize);
+
+    printf("\nLeast Recently Used (LRU):\n");
+    LRU(pages, n, frames, frameSize);
+
+    
+    printf("\nOptimal:\n");
+    Optimal(pages, n, frames, frameSize);
+
+    return 0;
+}
