@@ -1,6 +1,8 @@
-#include<stdio.h>
-#include<stdlib.h>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h> // Include for INT_MAX
+#include <unistd.h>
+#include <sys/wait.h>
 
 struct process {
     int pid; // Process ID
@@ -10,17 +12,15 @@ struct process {
     int completion_time; // Completion time
 };
 
-
 void sjf_preemptive(struct process *processes, int n) {
     int current_time = 0;
     int completed_processes = 0;
     int min_remaining_time, min_index;
 
     while (completed_processes < n) {
-        min_remaining_time = INT_MAX;
+        min_remaining_time = INT_MAX; // Initialize min_remaining_time with INT_MAX
         min_index = -1;
 
-       
         for (int i = 0; i < n; i++) {
             if (processes[i].arrival_time <= current_time && processes[i].remaining_time < min_remaining_time && processes[i].remaining_time > 0) {
                 min_remaining_time = processes[i].remaining_time;
@@ -28,30 +28,25 @@ void sjf_preemptive(struct process *processes, int n) {
             }
         }
 
-        
         if (min_index == -1) {
             current_time++;
             continue;
         }
 
-        
         processes[min_index].remaining_time--;
         current_time++;
 
-        
         if (processes[min_index].remaining_time == 0) {
             processes[min_index].completion_time = current_time;
             completed_processes++;
         }
     }
 
-   
     printf("PID\tCompletion Time\n");
     for (int i = 0; i < n; i++) {
         printf("%d\t%d\n", processes[i].pid, processes[i].completion_time);
     }
 }
-
 
 void round_robin(struct process *processes, int n, int quantum) {
     int current_time = 0;
@@ -73,7 +68,6 @@ void round_robin(struct process *processes, int n, int quantum) {
         }
     }
 
-    
     printf("PID\tCompletion Time\n");
     for (int i = 0; i < n; i++) {
         printf("%d\t%d\n", processes[i].pid, processes[i].completion_time);
