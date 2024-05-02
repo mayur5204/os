@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+// Function to sort an array in ascending order
+void bubbleSort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                // Swap arr[j] and arr[j+1]
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int arr[] = {7, 2, 1, 6, 8, 5, 3, 4}; // Sample array
+    int n = sizeof(arr) / sizeof(arr[0]); // Calculate the size of the array
+
+    pid_t pid = fork(); // Create a new process
+
+    if (pid < 0) {
+        // Fork failed
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {
+        // Child process
+        char *args[n + 2]; // Extra 2 for program name and NULL terminator
+
+        args[0] = "./display_reverse"; // Program name to execute
+        for (int i = 0; i < n; i++) {
+            args[i + 1] = malloc(10 * sizeof(char)); // Allocate memory for each argument
+            sprintf(args[i + 1], "%d", arr[i]); // Convert integer to string
+        }
+        args[n + 1] = NULL; // Last argument must be NULL for execve
+
+        execve(args[0], args, NULL); // Execute the display_reverse program
+        perror("execve"); // execve only returns on error
+        exit(EXIT_FAILURE);
+    } else {
+        // Parent process
+        wait(NULL); // Wait for the child process to finish sorting
+
+        // Sort the array in ascending order
+        bubbleSort(arr, n);
+
+        // Display the sorted array
+        printf("Sorted array: ");
+        for (int i = 0; i < n; i++) {
+            printf("%d ", arr[i]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
